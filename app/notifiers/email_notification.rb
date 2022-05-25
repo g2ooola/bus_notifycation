@@ -12,12 +12,6 @@ module Notifiers
       output ''
     end
 
-    # mailchimp https://mailchimp.com/developer/transactional/guides/quick-start/
-
-
-    # def notify_bus_will_be_arrived(email:, bus:, station_name:, arrive_minutes:)
-    # end
-
     def notify_bus_will_be_arrived(email:, bus:, station_name:, arrive_minutes:)
       now = Time.now.getlocal(LOCAL_TIME_ZONE)
       arrived_at = now + arrive_minutes * 60
@@ -31,13 +25,6 @@ module Notifiers
       output "smtp_info['auth']:          #{smtp_info['auth']}"
       output "smtp_info['sender_domain']: #{smtp_info['sender_domain']}"
       output "smtp_info['from_email']:    #{smtp_info['from_email']}"
-
-      # smtp_account = 'gsx1415@yahoo.com.tw'
-      # smtp_password = '79fbc8f506e8e44c8db8eca4745a0120-us17'
-      # smtp_server = 'smtp.mandrillapp.com'
-      # smtp_port = 465
-      # smtp_auth = :login
-      # sender_domain = 'gsxtw.com'
 
       sender_domain = 'gsxtw.com'
       from_email = smtp_info['from_email']

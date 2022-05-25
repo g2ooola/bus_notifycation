@@ -10,7 +10,7 @@ module BusInfos
         @realtime_bus_info_reader = RealtimeBusOfStationSource.new
       end
 
-      def normalizer(subscribtion_records)
+      def normalize(subscribtion_records)
         @normalizer.exec(subscribtion_records)
       end
 

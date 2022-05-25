@@ -1,31 +1,29 @@
 require 'time'
 require_relative '../toolkits/default_log.rb'
+require_relative '../toolkits/helper.rb'
 require_relative './test_email_notifycation.rb'
 require_relative './email_notification.rb'
 
 module Notifiers
   # TODO: 視情況加入手機或其他方式通知
-  # TODO: 視情況改成 batch notify
-  # TODO: 視情況改用 multi threads 通知
+  # TODO: 視情況改成 batch 發送通知
 
   class Handler < Base
-    MINUTES_TO_NOTIFY = 7
+    MINUTES_TO_NOTIFY = self.new.local_test? ? 0.2 : 7
     SECONDS_TO_NOTIFY = MINUTES_TO_NOTIFY * 60
-    def initialize(local_test: false)
-      @local_test = local_test
-    end
 
-    def notify_if_need(bus_arrive_sec:, subscribe_record:)
-      subscribers = subscribe_record[:subscribers]
-      return output('time_too_long') if time_too_long?(bus_arrive_sec)
-      return output('notify_too_close') if notify_too_close?(subscribers)
+    def notify_if_need(bus_arrive_sec:, subscribtion_data:)
+      return output("time_too_long #{bus_arrive_sec}") if time_too_long?(bus_arrive_sec)
+      return output('notify_too_close') if notify_too_close?(subscribtion_data)
 
-      # in special state
-      if in_special_state?(bus_arrive_sec)
-        notify_cancel_to_all(subscribe_record)
+      result = if in_special_state?(bus_arrive_sec)
+        notify_cancel_to_all(subscribtion_data)
       else
-        notify_arrived_to_all(bus_arrive_sec: bus_arrive_sec, subscribe_record: subscribe_record)
+        notify_arrived_to_all(bus_arrive_sec: bus_arrive_sec, subscribtion_data: subscribtion_data)
       end
+
+      mark_notifyed(subscribtion_data)
+      result
     end
 
     private
@@ -35,45 +33,49 @@ module Notifiers
     end
 
     def time_too_long?(bus_arrive_sec)
-      bus_arrive_sec > SECONDS_TO_NOTIFY
+      bus_arrive_sec > 0 && bus_arrive_sec > SECONDS_TO_NOTIFY
     end
 
-    def notify_too_close?(subscribers)
-      return false if subscribers[:notified_at].nil?
+    def notify_too_close?(subscribtion_data)
+      return false if subscribtion_data[:notified_at].nil?
       
-      notified_at = Time.parse(subscribers[:notified_at])
-      notified_at - Time.now < SECONDS_TO_NOTIFY
+      notified_at = Toolkits::Helper.string_to_time(subscribtion_data[:notified_at])
+      Time.now - notified_at < SECONDS_TO_NOTIFY
     end
 
-    def notify_cancel_to_all(subscribe_record)
-      subscribers = subscribe_record[:subscribers]
-      email_notifier = get_email_notifier
+    def notify_cancel_to_all(subscribtion_data)
+      subscribers = subscribtion_data[:subscribers]
 
-      subscribers[:all_contact_way].each do |contact_way|
+      subscribers.map do |contact_way|
         email_notifier.notify_special_state(
           email: contact_way[:email],
-          bus: subscribe_record[:target][:bus_no],
-          station_name: subscribe_record[:target][:station_name]
+          bus: subscribtion_data[:target][:bus_no],
+          station_name: subscribtion_data[:target][:station_name]
         )
       end
     end
 
-    def notify_arrived_to_all(bus_arrive_sec:, subscribe_record:)
-      subscribers = subscribe_record[:subscribers]
-      email_notifier = get_email_notifier
+    def notify_arrived_to_all(bus_arrive_sec:, subscribtion_data:)
+      subscribers = subscribtion_data[:subscribers]
 
-      subscribers[:all_contact_way].each do |contact_way|
+      subscribers.map do |contact_way|
         email_notifier.notify_bus_will_be_arrived(
           email: contact_way[:email],
-          bus: subscribe_record[:target][:bus_no],
-          station_name: subscribe_record[:target][:station_name],
+          bus: subscribtion_data[:target][:bus_no],
+          station_name: subscribtion_data[:target][:station_name],
           arrive_minutes: MINUTES_TO_NOTIFY
         )
       end
     end
 
-    def get_email_notifier
-      @local_test ? TestEmailNotifycation.new : EmailNotifycation.new
+    def mark_notifyed(subscribtion_data)
+      subscribtion_data[:notified_at] = Toolkits::Helper.time_to_string(Time.now)
+    end
+
+    def email_notifier
+      @email_notifier ||= begin
+        local_test? ? TestEmailNotifycation.new : EmailNotifycation.new
+      end
     end
   end
 end

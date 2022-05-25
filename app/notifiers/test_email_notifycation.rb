@@ -8,6 +8,8 @@ module Notifiers
       output "       email: #{email}"
       output "       bus:   #{bus}"
       output ''
+
+      'notify_special_state'
     end
 
     def notify_bus_will_be_arrived(email:, bus:, station_name:, arrive_minutes:)
@@ -18,6 +20,8 @@ module Notifiers
       output "       arrive_minutes: #{arrive_minutes}"
       output "       arrived_at:     #{arrived_at}"
       output ''
+
+      'notify_bus_will_be_arrived'
     end
   end
 end

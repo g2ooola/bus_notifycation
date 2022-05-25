@@ -48,78 +48,30 @@
 
   # send notify
 
-require_relative './bus_infos/pda/realtime_bus_of_station_source.rb'
+require_relative './bus_infos/pda/handler.rb'
 require_relative './notifiers/handler.rb'
+require_relative './subscribtions/file_reader.rb'
+require_relative './inteval_checker.rb'
+require_relative './base.rb'
 
-class MainFlow
-  def test
-    # bus_info_source = BusInfos::PdaSource.new
-    # result = bus_info_source.get_from_api(38878)
-    # puts result
-
-    subscribed_record = {
-      target: {
-        bus_no: 'name',
-        station_name: 'xxx',
-        station_id: 1,
-        started_at_int_delta: 61200,
-        ended_at_int_delta: 64800
-      },
-      subscribers: {
-        notified_at: nil,
-        all_contact_way: [{
-          email: '',
-          phone: ''
-        }]
-      }
-    }
-    # '2022-05-22 17:15:10 +0800'
-
-    notifier = Notifiers::Handler.new
-    notifier.notify_if_need(
-      bus_arrive_sec: 300,
-      subscribe_record: subscribed_record
-    )
+class MainFlow < Base
+  def initialize
+    output " local_test? #{local_test?}"
   end
 
   def start
     subscribed_source = Subscribtions::FileReader.new
-    bus_info_source = BusInfos::PdaSource::Handler.new
+    bus_info_source = BusInfos::Pda::Handler.new
     notifier = Notifiers::Handler.new
 
-    subscribed_records = subscribed_source.read!
-    subscribtion_datas = bus_info_source.normalizer(subscribed_records)
-
-    regularly_exec(
-      subscribtion_datas: subscribtion_datas,
+    interval_checker = IntevalChecker.new(
+      subscribed_source: subscribed_source,
       bus_info_source: bus_info_source,
       notifier: notifier
     )
-    
-  end
 
-  def regularly_exec(subscribtion_datas:, bus_info_source:, notifier:)
-    loop do
-      check_and_notify(
-        subscribtion_datas: subscribtion_datas,
-        bus_info_source: bus_info_source,
-        notifier: notifier
-      )
-
-      sleep(60)
-    end
-  end
-
-  # todo 通知過的不再通知
-  def check_and_notify(subscribtion_datas:, bus_info_source:, notifier:)
-    subscribtion_datas.each do |subscribed_record|
-      bus_arrive_sec = bus_info_source.realtime_bus_info_of_station(subscribed_record[:station_id])
-      notifier.notify_if_need(
-        bus_arrive_sec: bus_arrive_sec,
-        subscripers: subscribed_record[:subscribers]
-      )
-    end
+    interval_checker.exec
   end
 end
 
-MainFlow.new.test
+MainFlow.new.start

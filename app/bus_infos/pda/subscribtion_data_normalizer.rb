@@ -5,6 +5,15 @@ require 'open-uri'
 
 require_relative '../../base.rb'
 
+# Sample of subscribtion_records:
+# [
+#   { 'email' => 'e1@email.com', 'bus_no' => '672', 'direction' => '去程', 'station_name' => '秀朗國小' },
+#   { 'email' => 'e2@email.com', 'bus_no' => '棕1', 'direction' => '回程', 'station_name' => '公教住宅' },
+#   { 'email' => 'e3@email.com', 'bus_no' => '672', 'direction' => '去程', 'station_name' => '秀朗國小' }
+# ]
+#
+# Note: In fact, subscribtion_records is a CSV::Table, not a hash.
+
 module BusInfos
   module Pda
     class SubscribtionDataNormalizer < Base
@@ -22,8 +31,18 @@ module BusInfos
           station_name = record['station_name']
           station_id = station_id_map(bus_id)&.fetch(direction, nil)&.fetch(station_name, nil)
 
-          subscribtion_datas[station_id] ||= []
-          subscribtion_datas[station_id].push({ email: record['email'] })
+          subscribtion_datas[station_id] ||= {
+            target: {
+              bus_no: bus_no,
+              direction: direction,
+              station_name: station_name,
+              station_id: station_id
+            },
+            subscribers: []
+          }
+          subscribtion_datas[station_id][:subscribers].push({
+            email: record['email']
+          })
         end
 
         subscribtion_datas
