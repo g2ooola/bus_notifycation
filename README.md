@@ -1,4 +1,23 @@
 # bus_notifycation
+## How to user
+1. 在 private/secret.yml 中加入 gmail smtp 密碼
+yml 檔案格式如下
+
+```yml
+gmail_password: YOUR_PASS_WORD
+```
+
+smtp 密碼設定方式可參考 [REF](https://www.webdesigntooler.com/google-smtp-send-mail)
+
+## 需求
+1. 公車到站前自動通知
+2. 可供多人使用
+3. 可訂閱多條路線的多個站
+
+其他
+1. 建議以到站前 x 分鐘為基礎
+2. 暫時以 email 通知
+3. 只訂閱站不合理, 應該要加上時間
 
 ## 公車查詢網頁
 ### 流程

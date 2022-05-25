@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+  <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport">
+  <script src="ajax2.js">
+  </script>
+  <title>[棕1]公車動態資訊</title>
+  <link href="./css/style.css" rel="stylesheet" type="text/css">
+  <script language="JavaScript">
+         //GoogleAnalysisCount
+         var _gaq = _gaq || [];
+         _gaq.push(['_setAccount', 'UA-36595213-1']);
+         _gaq.push(['_setCustomVar',1, 'RouteName', '棕1', 3]);
+         _gaq.push(['_trackPageview']);
+
+         (function() {
+             var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+             ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+             var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+         })();
+
+         var PathAttrSymbolMap = {};
+         var VirtualStopMap = {}; 
+         var TTEMap = {'0':'進站中','':'未發車','-1':'未發車','-2':'交管不停','-3':'末班已過','-4':'今日未營運'};
+         var Timer = null;
+         
+         function queryDyna() {
+             if (Timer!=null) clearTimeout(Timer);
+             http('GET', 'RouteDyna?routeid=10291', processDyna);
+         }
+         
+         function processDyna(data) {
+             if (data.UpdateTime)
+                 {
+                 document.getElementById("spnUpdateTime").innerHTML= data.UpdateTime.substring(11);
+                 
+                 var okDataMS=Date.parse(data.UpdateTime.substr(0,10)+"T"+data.UpdateTime.substring(11).replace(/&#x3a;/g,":"))-1200000; // 20分
+                 var busmap = {};
+                 
+                 for (var i=0;i<data.Bus.length;i++)
+                     {
+                     if (data.Bus[i].a2==null) continue;
+                     if (data.Bus[i].a1!=null)
+                         {
+                         var arrA1 = data.Bus[i].a1.split(',');
+                         if (arrA1[3]=="2" || arrA1[4]=="99") continue;
+                         };
+                     var arrA2 = data.Bus[i].a2.split(',');
+                     if (arrA2[3]=="2" || arrA2[4]=="99") continue;
+                     
+                     if (/^TEST.*$/g.test(data.Bus[i].num)) continue;
+                     if (Date.parse("20"+arrA2[11].substr(0,2)+"-"+arrA2[11].substr(2,2)+"-"+arrA2[11].substr(4,2)+"T"+arrA2[11].substr(6,2)+":"+arrA2[11].substr(8,2)+":"+arrA2[11].substr(10,2))<okDataMS) continue;
+
+                     var busStopId=arrA2[7];
+                     if (VirtualStopMap.hasOwnProperty(busStopId)) busStopId=VirtualStopMap[busStopId];
+                     
+                     if (!busmap.hasOwnProperty(busStopId)) busmap[busStopId]=""; else busmap[busStopId]+="<br>";
+                     busmap[busStopId]+="<img border=0 src=\"bus" + data.Bus[i].type +".gif\"><font style=\"color:darkblue;\">" + data.Bus[i].num + (PathAttrSymbolMap.hasOwnProperty(arrA2[5])?PathAttrSymbolMap[arrA2[5]]:"") + "<\/font>";
+                     };
+
+                 for (var i=0;i<data.Stop.length;i++)
+                     {
+                     if (data.Stop[i].n1==null) continue;
+                     var arrN1 = data.Stop[i].n1.split(',');
+                     if (!document.getElementById("tte"+arrN1[1])) continue;
+                     
+                     if (TTEMap.hasOwnProperty(arrN1[7]))
+                         {
+                             if (busmap.hasOwnProperty(arrN1[1]))
+                                 {
+                                     if (arrN1[7]=="0")
+                                         document.getElementById("tte"+arrN1[1]).innerHTML= busmap[arrN1[1]]+"<br>"+TTEMap[arrN1[7]];
+                                     else
+                                         document.getElementById("tte"+arrN1[1]).innerHTML= TTEMap[arrN1[7]]+"<br>"+busmap[arrN1[1]];
+                                 }
+                             else
+                                 document.getElementById("tte"+arrN1[1]).innerHTML= TTEMap[arrN1[7]];
+                         }
+                     else
+                         {
+                             var tte=parseInt(arrN1[7],10);
+                             if (busmap.hasOwnProperty(arrN1[1]))
+                                 {
+                                     if (tte>0 && tte<180)
+                                         document.getElementById("tte"+arrN1[1]).innerHTML= busmap[arrN1[1]]+"<br>將到站";
+                                     else
+                                         document.getElementById("tte"+arrN1[1]).innerHTML= Math.floor(tte/60)+"分<br>"+busmap[arrN1[1]];
+                                 }
+                             else
+                                 {
+                                     if (tte>0 && tte<180)
+                                         document.getElementById("tte"+arrN1[1]).innerHTML= "將到站";
+                                     else
+                                         document.getElementById("tte"+arrN1[1]).innerHTML= Math.floor(tte/60)+"分";
+                                 };
+                         };
+                     };
+                 };
+             Timer=setTimeout(queryDyna,60000);
+         }
+  </script>
+</head>
+<body onload="queryDyna();">
+  <center>
+    <table class="formattable1">
+      <tr>
+        <th class="title1"><a class="title1" href="index.jsp">行動查詢系統</a></th>
+      </tr>
+      <tr>
+        <th class="title2"><a class="title2" href="routelist.jsp">查詢公車動態資訊</a></th>
+      </tr>
+      <tr>
+        <th class="title3"><a href="routeinfo.jsp?rid=10291">棕1</a><br>
+        <span class="updatetime">(更新時間：<span id="spnUpdateTime"></span>&nbsp;<input onclick="queryDyna();" type="button" value="立刻更新">)</span></th>
+      </tr>
+    </table><marquee class="marqueetd" scrollamount="4" width="100%">臺北市公車因應疫情短期調整班次，請詳大臺北公車首頁公車路線調整公告</marquee>
+    <table class="formattable1">
+      <tr>
+        <td>
+          <table border="0" width="100%">
+            <tr>
+              <td class="ttegotitle" width="50%">去程 (往松山機場)</td>
+              <td class="ttebacktitle" width="50%">返程 (往松山車站)</td>
+            </tr>
+            <tr>
+              <td valign="top" width="50%">
+                <table border="0" width="100%">
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=181399">潭美國小(行善)</a></td>
+                    <td align="center" id="tte181399" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=57291">潭美國小(舊宗)</a></td>
+                    <td align="center" id="tte57291" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=13315">週美里一</a></td>
+                    <td align="center" id="tte13315" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=13317">玉成里</a></td>
+                    <td align="center" id="tte13317" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=13319">松山車站(八德)</a></td>
+                    <td align="center" id="tte13319" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=13321">松山農會</a></td>
+                    <td align="center" id="tte13321" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=13323">饒河街觀光夜市(塔悠)</a></td>
+                    <td align="center" id="tte13323" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=13325">南松山(塔悠)</a></td>
+                    <td align="center" id="tte13325" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=13327">發電所(西松高中)</a></td>
+                    <td align="center" id="tte13327" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=13329">新東里</a></td>
+                    <td align="center" id="tte13329" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=13331">新東街口</a></td>
+                    <td align="center" id="tte13331" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=13333">民生社區活動中心</a></td>
+                    <td align="center" id="tte13333" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=13335">聯合二村</a></td>
+                    <td align="center" id="tte13335" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=13337">介壽國中</a></td>
+                    <td align="center" id="tte13337" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=13339">公教住宅</a></td>
+                    <td align="center" id="tte13339" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=13341">民生敦化路口</a></td>
+                    <td align="center" id="tte13341" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=13343">民生復興路口</a></td>
+                    <td align="center" id="tte13343" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=13345">民生東路口</a></td>
+                    <td align="center" id="tte13345" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=13347">捷運中山國中站</a></td>
+                    <td align="center" id="tte13347" nowrap></td>
+                  </tr>
+                  <tr class="ttego2">
+                    <td><a href="stop.jsp?sid=13349">民權敦化路口</a></td>
+                    <td align="center" id="tte13349" nowrap></td>
+                  </tr>
+                  <tr class="ttego1">
+                    <td><a href="stop.jsp?sid=57293">松山機場</a></td>
+                    <td align="center" id="tte57293" nowrap></td>
+                  </tr>
+                </table>
+              </td>
+              <td valign="top" width="50%">
+                <table border="0" width="100%">
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=13355">民權敦化路口</a></td>
+                    <td align="center" id="tte13355" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=13357">民權復興路口</a></td>
+                    <td align="center" id="tte13357" nowrap></td>
+                  </tr>
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=13359">捷運中山國中站</a></td>
+                    <td align="center" id="tte13359" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=13361">民生復興路口</a></td>
+                    <td align="center" id="tte13361" nowrap></td>
+                  </tr>
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=13363">民生敦化路口</a></td>
+                    <td align="center" id="tte13363" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=13365">公教住宅</a></td>
+                    <td align="center" id="tte13365" nowrap></td>
+                  </tr>
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=13367">介壽國中</a></td>
+                    <td align="center" id="tte13367" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=13369">聯合二村</a></td>
+                    <td align="center" id="tte13369" nowrap></td>
+                  </tr>
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=13371">民生社區活動中心</a></td>
+                    <td align="center" id="tte13371" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=13373">新東街口</a></td>
+                    <td align="center" id="tte13373" nowrap></td>
+                  </tr>
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=13375">新東里</a></td>
+                    <td align="center" id="tte13375" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=13377">發電所(西松高中)</a></td>
+                    <td align="center" id="tte13377" nowrap></td>
+                  </tr>
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=13379">南松山(塔悠)</a></td>
+                    <td align="center" id="tte13379" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=13381">饒河街觀光夜市(塔悠)</a></td>
+                    <td align="center" id="tte13381" nowrap></td>
+                  </tr>
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=13383">松山農會</a></td>
+                    <td align="center" id="tte13383" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=13385">松山車站(八德)</a></td>
+                    <td align="center" id="tte13385" nowrap></td>
+                  </tr>
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=13387">玉成里</a></td>
+                    <td align="center" id="tte13387" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=13389">週美里一</a></td>
+                    <td align="center" id="tte13389" nowrap></td>
+                  </tr>
+                  <tr class="tteback1">
+                    <td><a href="stop.jsp?sid=57292">潭美國小(舊宗)</a></td>
+                    <td align="center" id="tte57292" nowrap></td>
+                  </tr>
+                  <tr class="tteback2">
+                    <td><a href="stop.jsp?sid=181400">潭美國小(行善)</a></td>
+                    <td align="center" id="tte181400" nowrap></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </center>
+</body>
+</html>
