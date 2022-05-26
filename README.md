@@ -18,6 +18,8 @@
   * 內容格式可以參考 `privare/secret.yml.sample.yaml`
 * 在 `data/subscribtion.csv` 內設定要訂閱的公車資料
   * 內容格式可參考 `data/subscribtion.csv.sample`
+  * 可訂閱的公車路線名稱, 站牌名稱, 可參考[此網站](https://pda.5284.gov.taipei/MQS/routelist.jsp)
+* 有使用到 ruby gem, 所以須執行 `bundle install`
 
 ### 執行程式
 * 直接執行
