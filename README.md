@@ -26,3 +26,5 @@
     * 所有通知顯示在 terminal 上, 不寄信
 * 可使用 `systemd` 確保此程式維持執行
 
+* 執行單元測試
+  * `LOCAL_TEST=true ruby app/test.rb`

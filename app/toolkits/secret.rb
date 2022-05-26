@@ -3,10 +3,7 @@ require 'yaml'
 module Toolkits
   class Secret
     def self.info
-      @@data ||= begin
-        thing = YAML.load_file('private/secret.yml')
-        thing.inspect
-      end
+      @@data ||= YAML.load_file('private/secret.yml')
     end
   end
 end

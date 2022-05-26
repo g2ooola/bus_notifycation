@@ -13,14 +13,16 @@ class TestMachine
   # bus 將在一秒後抵達, 應該要觸發通知
   BUS_ARRIVE_SEC_TO_NOTIFY = 1
 
-  def test_yml
+  # 未加入 test_all
+  def start_test_yml
     puts Toolkits::Secret.info
   end
 
-  def test_email_notification
+  # 未加入 test_all
+  def start_test_email_notification
     email_notification = Notifiers::EmailNotifycation.new
     email_notification.notify_bus_will_be_arrived(
-      email: 'gsx1415@gmail.com',
+      email: 'someone@email.com',
       bus: '672',
       station_name: '台電大樓',
       arrive_minutes: 7
@@ -49,7 +51,6 @@ class TestMachine
     )
 
     should_be = 'notify_too_close'
-    puts " ===== output #{output}"
 
     output == should_be
   end
@@ -258,4 +259,4 @@ def test_one(method_name)
 end
 
 test_all()
-# test_one(:test_notify_too_close)
+# test_one(:test_email_notification)

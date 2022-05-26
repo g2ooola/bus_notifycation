@@ -1,4 +1,5 @@
 require 'net/smtp'
+require 'securerandom'
 
 module Notifiers
   class EmailNotifycation < Base
@@ -15,17 +16,9 @@ module Notifiers
       arrived_at = now + arrive_minutes * 60
 
       smtp_info = Toolkits::Secret.info['smtp']
-
-      output "smtp_info['account']:       #{smtp_info['account']}"
-      output "smtp_info['password']:      #{smtp_info['password']}"
-      output "smtp_info['server']:        #{smtp_info['server']}"
-      output "smtp_info['port']:          #{smtp_info['port']}"
-      output "smtp_info['auth']:          #{smtp_info['auth']}"
-      output "smtp_info['sender_domain']: #{smtp_info['sender_domain']}"
-      output "smtp_info['from_email']:    #{smtp_info['from_email']}"
+      from_email = Toolkits::Secret.info['from_email']
 
       sender_domain = 'gsxtw.com'
-      from_email = smtp_info['from_email']
       to_email = email
 
       msgstr = <<-EOF
@@ -33,13 +26,13 @@ module Notifiers
         To: Destination Address <#{to_email}>
         Subject: Bus(#{bus}) Will Arrive
         Date: #{now}
-        Message-Id: <unique.message.id.string@example.com>
+        Message-Id: <#{SecureRandom.hex}@mervin.com>
 
         Hi,
         Your bus (#{bus}) will arrive in #{arrive_minutes} minutes (#{arrived_at}).
       EOF
 
-      Net::SMTP.start(
+      result = Net::SMTP.start(
         smtp_info['server'],
         smtp_info['port'],
         smtp_info['sender_domain'],
@@ -50,6 +43,7 @@ module Notifiers
         smtp.send_message(msgstr, from_email, to_email)
       end
 
+      error_report('send email fail') unless result.success?
     end
   end
 end
