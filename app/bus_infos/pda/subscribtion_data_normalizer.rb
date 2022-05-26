@@ -17,6 +17,9 @@ require_relative '../../base.rb'
 module BusInfos
   module Pda
     class SubscribtionDataNormalizer < Base
+
+      class BusIdRepeat < StandardError; end
+
       def initialize
         @station_id_map = {}
       end
@@ -50,12 +53,41 @@ module BusInfos
 
       private
 
-      FILE_PATH = 'data/pad_bus_no.json'
+      # ====== bus id ===== #
+
       def bus_id_map
-        @bus_id_map ||= begin
-          JSON.parse(File.read(FILE_PATH))
-        end
+        @bus_id_map ||= load_bus_id_map
       end
+
+      def load_bus_id_map
+        url_string = 'https://pda.5284.gov.taipei/MQS/routelist.jsp'
+        doc = Nokogiri::HTML(URI.open(url_string))
+        bus_map = {}
+
+        bus_doms = doc.css('option')
+        bus_doms.each do |dom|
+          bus_id, bus_no = parse_bus_dom(dom)
+          next if bus_id == ''
+
+          if bus_map[bus_no] && bus_map[bus_no] != bus_id
+            # 有多線包含同一 station 的狀況, 如幹線公車同時也是低地板公車
+            raise BusIdRepeat, "bus_no #{bus_no} repeat!"
+          end
+          bus_map[bus_no] = bus_id
+        rescue BusIdRepeat => e
+          error_report(e)
+        end
+
+        bus_map
+      end
+
+      def parse_bus_dom(dom)
+        bus_id = dom.attr('value')
+        bus_no = dom.text
+        [bus_id, bus_no]
+      end
+
+      # ===== station id ====== #
 
       def station_id_map(rid)
         @station_id_map[rid.to_i] ||= load_station_id_map(rid)

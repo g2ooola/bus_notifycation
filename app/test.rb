@@ -14,10 +14,6 @@ class TestMachine
   # bus 將在一秒後抵達, 應該要觸發通知
   BUS_ARRIVE_SEC_TO_NOTIFY = 1
 
-  def test_default_log
-    Toolkits::DefaultLog.logger.info('123')
-  end
-
   def test_yml
     puts Toolkits::Secret.info
   end
@@ -54,6 +50,7 @@ class TestMachine
     )
 
     should_be = 'notify_too_close'
+    puts " ===== output #{output}"
 
     output == should_be
   end
@@ -182,6 +179,13 @@ class TestMachine
     }
     
     output == should_be
+  end
+
+  def test_pda_sub_bus_id_map
+    object = BusInfos::Pda::SubscribtionDataNormalizer.new
+    output = object.send(:bus_id_map)
+
+    result = output['紅2'] == '15312' && output['藍46'] == '16586' && output['672'] == '10785'
   end
 
   def test_pda_sub_station_id_map
