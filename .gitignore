@@ -1,3 +1,4 @@
 .DS_Store
 private/*
+!private/secret.yml.sample.yaml
 data/subscribtion.csv
