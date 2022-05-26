@@ -1,7 +1,5 @@
 require 'net/smtp'
 
-require_relative '../toolkits/default_log.rb'
-
 module Notifiers
   class EmailNotifycation < Base
     LOCAL_TIME_ZONE = '+08:00'

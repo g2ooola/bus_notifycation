@@ -5,7 +5,6 @@ require_relative './subscribtions/file_reader.rb'
 require_relative './notifiers/handler.rb'
 require_relative './notifiers/email_notification.rb'
 require_relative './toolkits/secret.rb'
-require_relative './toolkits/default_log.rb'
 require_relative './toolkits/helper.rb'
 
 require 'yaml'

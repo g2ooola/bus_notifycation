@@ -1,5 +1,4 @@
 require 'time'
-require_relative '../toolkits/default_log.rb'
 require_relative '../toolkits/helper.rb'
 require_relative './test_email_notifycation.rb'
 require_relative './email_notification.rb'

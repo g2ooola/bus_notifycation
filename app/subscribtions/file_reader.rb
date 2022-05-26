@@ -1,5 +1,4 @@
 require 'csv'
-require_relative '../toolkits/default_log.rb'
 
 module Subscribtions
   class FileReader

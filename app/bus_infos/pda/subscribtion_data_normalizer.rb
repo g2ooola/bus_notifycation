@@ -28,11 +28,20 @@ module BusInfos
         subscribtion_datas = {}
         subscribtion_records.each do |record|
           bus_no = record['bus_no']
-          bus_id = bus_id_map[bus_no]
-
           direction = record['direction']
           station_name = record['station_name']
+          email = record['email']
+
+          if bus_no.nil? || direction.nil? || station_name.nil? || email.nil?
+            raise "Subscriber info error, bus_no: #{bus_no}, direction: #{direction}, station_name: #{station_name}, email: #{email}"
+          end
+
+          bus_id = bus_id_map[bus_no]
           station_id = station_id_map(bus_id)&.fetch(direction, nil)&.fetch(station_name, nil)
+
+          if station_id.nil?
+            raise "station_id is nil!, bus_no: #{bus_no}, direction: #{direction}, station_name: #{station_name}"
+          end
 
           subscribtion_datas[station_id] ||= {
             target: {
@@ -44,11 +53,15 @@ module BusInfos
             subscribers: []
           }
           subscribtion_datas[station_id][:subscribers].push({
-            email: record['email']
+            email: email
           })
+        rescue StandardError => e
+          error_report(e)
         end
 
         subscribtion_datas
+      rescue StandardError => e
+        error_report(e)
       end
 
       private

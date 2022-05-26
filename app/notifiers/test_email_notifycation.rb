@@ -1,4 +1,3 @@
-require_relative '../toolkits/default_log.rb'
 
 module Notifiers
   class TestEmailNotifycation < Base
